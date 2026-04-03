@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAppStore } from "@/store/useAppStore";
 import { useState } from "react";
 
@@ -16,7 +16,9 @@ export function Layout() {
   const importSnapshot = useAppStore((s) => s.importSnapshot);
   const resetWorkspace = useAppStore((s) => s.resetWorkspace);
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [importText, setImportText] = useState("");
+  const mainWide = pathname === "/flow";
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -149,7 +151,15 @@ export function Layout() {
           </button>
         </div>
       ) : null}
-      <main style={{ flex: 1, padding: "1.5rem", maxWidth: 1200, width: "100%", margin: "0 auto" }}>
+      <main
+        style={{
+          flex: 1,
+          padding: "1.5rem",
+          maxWidth: mainWide ? "min(100%, 1600px)" : 1200,
+          width: "100%",
+          margin: "0 auto",
+        }}
+      >
         <Outlet />
       </main>
     </div>

@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import type {
   FieldMappingRow,
   FlowNode,
+  FlowPresentationComment,
   OpenQuestion,
   Requirement,
   RequirementPhase,
@@ -114,9 +115,12 @@ interface AppState {
   purchaseMapping: FieldMappingRow[];
   redemptionMapping: FieldMappingRow[];
   questions: OpenQuestion[];
+  presentationComments: FlowPresentationComment[];
   selectedFlowNodeId: string | null;
 
   setSelectedFlowNodeId: (id: string | null) => void;
+  addPresentationComment: (author: string, body: string) => void;
+  removePresentationComment: (id: string) => void;
   updateFlowNode: (id: string, patch: Partial<FlowNode>) => void;
   updateRequirement: (id: string, patch: Partial<Requirement>) => void;
   addRequirement: (
@@ -150,6 +154,7 @@ const seedState = () => ({
   purchaseMapping: structuredClone(initialPurchaseMapping),
   redemptionMapping: structuredClone(initialRedemptionMapping),
   questions: structuredClone(initialQuestions),
+  presentationComments: [] as FlowPresentationComment[],
 });
 
 export const useAppStore = create<AppState>()(
@@ -159,6 +164,24 @@ export const useAppStore = create<AppState>()(
       selectedFlowNodeId: null,
 
       setSelectedFlowNodeId: (id) => set({ selectedFlowNodeId: id }),
+
+      addPresentationComment: (author, body) =>
+        set((s) => {
+          const t = body.trim();
+          if (!t) return s;
+          const c: FlowPresentationComment = {
+            id: `pc-${crypto.randomUUID?.() ?? String(Date.now())}`,
+            author: author.trim() || "Anonymous",
+            body: t,
+            createdAt: new Date().toISOString(),
+          };
+          return { presentationComments: [...s.presentationComments, c] };
+        }),
+
+      removePresentationComment: (id) =>
+        set((s) => ({
+          presentationComments: s.presentationComments.filter((c) => c.id !== id),
+        })),
 
       updateFlowNode: (id, patch) =>
         set((s) => {
@@ -271,6 +294,7 @@ export const useAppStore = create<AppState>()(
           purchaseMapping,
           redemptionMapping,
           questions,
+          presentationComments,
         } = get();
         return JSON.stringify(
           {
@@ -281,6 +305,7 @@ export const useAppStore = create<AppState>()(
             purchaseMapping,
             redemptionMapping,
             questions,
+            presentationComments,
           },
           null,
           2,
@@ -300,6 +325,8 @@ export const useAppStore = create<AppState>()(
             redemptionMapping:
               data.redemptionMapping ?? get().redemptionMapping,
             questions: data.questions ?? get().questions,
+            presentationComments:
+              data.presentationComments ?? get().presentationComments,
           });
         } catch {
           /* ignore */
@@ -318,6 +345,7 @@ export const useAppStore = create<AppState>()(
         purchaseMapping: s.purchaseMapping,
         redemptionMapping: s.redemptionMapping,
         questions: s.questions,
+        presentationComments: s.presentationComments,
       }),
     },
   ),

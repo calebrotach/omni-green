@@ -1,213 +1,186 @@
 import type { CSSProperties } from "react";
+import { useState } from "react";
 import { MermaidChart } from "@/components/MermaidChart";
-import { buildFlowchartMermaid, useAppStore } from "@/store/useAppStore";
-import type { RequirementPhase } from "@/types";
+import {
+  SWIMLANE_END_TO_END,
+  SWIMLANE_LIFECYCLE,
+} from "@/data/presentationDiagrams";
+import { useAppStore } from "@/store/useAppStore";
 
 export function FlowPage() {
-  const flowNodes = useAppStore((s) => s.flowNodes);
-  const flowEdges = useAppStore((s) => s.flowEdges);
-  const selectedFlowNodeId = useAppStore((s) => s.selectedFlowNodeId);
-  const setSelectedFlowNodeId = useAppStore((s) => s.setSelectedFlowNodeId);
-  const updateFlowNode = useAppStore((s) => s.updateFlowNode);
+  const presentationComments = useAppStore((s) => s.presentationComments);
+  const addPresentationComment = useAppStore((s) => s.addPresentationComment);
+  const removePresentationComment = useAppStore(
+    (s) => s.removePresentationComment,
+  );
 
-  const selected = flowNodes.find((n) => n.id === selectedFlowNodeId) ?? null;
-  const selectedMermaidId = selected?.mermaidId ?? null;
+  const [author, setAuthor] = useState("");
+  const [draft, setDraft] = useState("");
 
-  const definition = buildFlowchartMermaid(
-    flowNodes,
-    flowEdges,
-    selectedMermaidId,
+  const sorted = [...presentationComments].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 
   return (
-    <div>
-      <h1 style={{ marginTop: 0 }}>Trade execution flow</h1>
-      <p style={{ color: "var(--muted)", maxWidth: "65ch" }}>
-        Model omnibus mutual-fund style flow for evergreen private-wealth
-        programs custodied at UMB (pattern aligned with US omni trading and
-        distributor file conventions such as{" "}
-        <a
-          href="https://www.stepstonegroup.com/what-we-do/solutions-services/private-wealth-solutions/"
-          target="_blank"
-          rel="noreferrer"
-        >
-          StepStone private wealth solutions
-        </a>
-        ). Company name in scope: <strong>OmniGreen</strong> (replace any legacy
-        “Monark” references). Edit a step on the right — linked requirements in{" "}
-        <strong>Requirements by timeline</strong> update automatically.
-      </p>
+    <div style={{ maxWidth: "100%" }}>
+      <header style={{ marginBottom: "1.5rem" }}>
+        <h1 style={{ margin: "0 0 0.35rem", fontSize: "clamp(1.35rem, 2.5vw, 1.75rem)" }}>
+          Trade execution flow
+        </h1>
+        <p style={{ margin: 0, color: "var(--muted)", maxWidth: "72ch", lineHeight: 1.55 }}>
+          Swimlane views of how <strong>orders</strong> become <strong>trades</strong> at the
+          custodian, become <strong>omnibus trades at the fund</strong>, then{" "}
+          <strong>settle</strong> back onto OmniGreen books for clients. For evergreen /
+          private-wealth style programs custodied at UMB; allocator in scope is{" "}
+          <strong>OmniGreen</strong>.
+        </p>
+      </header>
 
-      <div
+      <section>
+        <h2 style={diagramTitle}>End-to-end swimlanes</h2>
+        <p style={diagramCaption}>
+          Each row is an actor; steps read left to right. Arrows crossing rows are
+          handoffs between OmniGreen, UMB, the fund / TA, and books &amp; records.
+        </p>
+        <MermaidChart
+          definition={SWIMLANE_END_TO_END}
+          size="presentation"
+        />
+      </section>
+
+      <section style={{ marginTop: "2.5rem" }}>
+        <h2 style={diagramTitle}>Lifecycle summary</h2>
+        <p style={diagramCaption}>
+          Condensed stages for presentations: orders → trades → omni at fund → settled
+          client view.
+        </p>
+        <MermaidChart
+          definition={SWIMLANE_LIFECYCLE}
+          size="presentation"
+        />
+      </section>
+
+      <section
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
-          gap: "1.25rem",
-          marginTop: "1.25rem",
-          alignItems: "start",
+          marginTop: "3rem",
+          paddingTop: "1.75rem",
+          borderTop: "1px solid var(--border)",
         }}
       >
-        <div>
-          <MermaidChart definition={definition} />
-          <p style={{ fontSize: "0.85rem", color: "var(--muted)", marginTop: "0.75rem" }}>
-            Select a step to highlight the diagram. Cutoff times follow the UMB
-            thread (4:00 PM ET wire same day as import; order file cutoff
-            pending 6:00 PM ET confirmation).
-          </p>
-        </div>
+        <h2 style={{ margin: "0 0 0.5rem", fontSize: "1.15rem" }}>
+          Comments &amp; conversation
+        </h2>
+        <p style={{ margin: "0 0 1rem", color: "var(--muted)", fontSize: "0.9rem", maxWidth: "62ch" }}>
+          Notes for you and your CPO during walkthroughs. Stored in this browser (and in{" "}
+          <strong>Export JSON</strong> if you share a snapshot).
+        </p>
 
-        <aside
+        <div
           style={{
-            border: "1px solid var(--border)",
-            borderRadius: 12,
-            padding: "1rem",
-            background: "var(--bg-elevated)",
-            position: "sticky",
-            top: "1rem",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.65rem",
+            marginBottom: "1.25rem",
+            maxWidth: 640,
           }}
         >
-          <h2 style={{ margin: "0 0 0.75rem", fontSize: "1rem" }}>Flow steps</h2>
-          <ul style={{ listStyle: "none", padding: 0, margin: "0 0 1rem" }}>
-            {flowNodes.map((n) => (
-              <li key={n.id} style={{ marginBottom: "0.35rem" }}>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSelectedFlowNodeId(
-                      selectedFlowNodeId === n.id ? null : n.id,
-                    )
-                  }
+          <input
+            placeholder="Your name (optional)"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            style={inputStyle}
+            autoComplete="name"
+          />
+          <textarea
+            placeholder="Add a comment or question…"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            style={{ ...inputStyle, minHeight: 88, resize: "vertical" }}
+          />
+          <button
+            type="button"
+            className="btn-primary"
+            style={{ alignSelf: "flex-start" }}
+            onClick={() => {
+              addPresentationComment(author, draft);
+              setDraft("");
+            }}
+          >
+            Post comment
+          </button>
+        </div>
+
+        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+          {sorted.length === 0 ? (
+            <li style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
+              No comments yet.
+            </li>
+          ) : (
+            sorted.map((c) => (
+              <li
+                key={c.id}
+                style={{
+                  border: "1px solid var(--border)",
+                  borderRadius: 10,
+                  padding: "0.85rem 1rem",
+                  marginBottom: "0.65rem",
+                  background: "var(--bg-elevated)",
+                }}
+              >
+                <div
                   style={{
-                    width: "100%",
-                    textAlign: "left",
-                    padding: "0.5rem 0.65rem",
-                    borderRadius: 8,
-                    border: `1px solid ${selectedFlowNodeId === n.id ? "var(--accent)" : "var(--border)"}`,
-                    background:
-                      selectedFlowNodeId === n.id ? "#1a2e24" : "var(--bg)",
-                    color: "var(--text)",
+                    display: "flex",
+                    flexWrap: "wrap",
+                    alignItems: "baseline",
+                    gap: "0.5rem",
+                    marginBottom: "0.35rem",
                   }}
                 >
-                  <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>
-                    {n.title}
-                  </div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
-                    {n.phase}
-                  </div>
-                </button>
+                  <strong style={{ fontSize: "0.9rem" }}>{c.author}</strong>
+                  <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
+                    {new Date(c.createdAt).toLocaleString()}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    style={{
+                      marginLeft: "auto",
+                      fontSize: "0.75rem",
+                      padding: "0.2rem 0.5rem",
+                    }}
+                    onClick={() => removePresentationComment(c.id)}
+                  >
+                    Remove
+                  </button>
+                </div>
+                <p style={{ margin: 0, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+                  {c.body}
+                </p>
               </li>
-            ))}
-          </ul>
-
-          {selected ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
-              <label style={labelStyle}>
-                Title
-                <input
-                  style={inputStyle}
-                  value={selected.title}
-                  onChange={(e) =>
-                    updateFlowNode(selected.id, { title: e.target.value })
-                  }
-                />
-              </label>
-              <label style={labelStyle}>
-                Phase (timeline)
-                <select
-                  style={inputStyle}
-                  value={selected.phase}
-                  onChange={(e) =>
-                    updateFlowNode(selected.id, {
-                      phase: e.target.value as RequirementPhase,
-                    })
-                  }
-                >
-                  {[
-                    "Order intake",
-                    "Submission & files",
-                    "Wire & funding",
-                    "Confirmation & positions",
-                    "Settlement & books",
-                    "Client experience & API",
-                    "Account structure & custody",
-                  ].map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label style={labelStyle}>
-                Summary (synced into requirements)
-                <textarea
-                  style={{ ...inputStyle, minHeight: 88, resize: "vertical" }}
-                  value={selected.summary}
-                  onChange={(e) =>
-                    updateFlowNode(selected.id, { summary: e.target.value })
-                  }
-                />
-              </label>
-              <label style={labelStyle}>
-                Timing / SLA note
-                <textarea
-                  style={{ ...inputStyle, minHeight: 72, resize: "vertical" }}
-                  value={selected.timingNote}
-                  onChange={(e) =>
-                    updateFlowNode(selected.id, { timingNote: e.target.value })
-                  }
-                />
-              </label>
-              <label style={labelStyle}>
-                Actor
-                <input
-                  style={inputStyle}
-                  value={selected.actor}
-                  onChange={(e) =>
-                    updateFlowNode(selected.id, { actor: e.target.value })
-                  }
-                />
-              </label>
-              <label style={labelStyle}>
-                System / channel
-                <input
-                  style={inputStyle}
-                  value={selected.systemOrChannel}
-                  onChange={(e) =>
-                    updateFlowNode(selected.id, {
-                      systemOrChannel: e.target.value,
-                    })
-                  }
-                />
-              </label>
-              <p style={{ fontSize: "0.8rem", color: "var(--muted)", margin: 0 }}>
-                Linked requirement IDs:{" "}
-                {selected.linkedRequirementIds.length
-                  ? selected.linkedRequirementIds.join(", ")
-                  : "none"}
-              </p>
-            </div>
-          ) : (
-            <p style={{ margin: 0, color: "var(--muted)", fontSize: "0.9rem" }}>
-              Select a step to edit. Updates merge into requirement bodies for
-              linked items.
-            </p>
+            ))
           )}
-        </aside>
-      </div>
+        </ul>
+      </section>
     </div>
   );
 }
 
-const labelStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "0.25rem",
-  fontSize: "0.75rem",
+const diagramTitle: CSSProperties = {
+  margin: "0 0 0.35rem",
+  fontSize: "1.05rem",
+  fontWeight: 600,
+};
+
+const diagramCaption: CSSProperties = {
+  margin: "0 0 0.85rem",
+  fontSize: "0.88rem",
   color: "var(--muted)",
+  maxWidth: "70ch",
+  lineHeight: 1.5,
 };
 
 const inputStyle: CSSProperties = {
-  padding: "0.45rem 0.55rem",
+  padding: "0.55rem 0.65rem",
   borderRadius: 8,
   border: "1px solid var(--border)",
   background: "var(--bg)",

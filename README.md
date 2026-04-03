@@ -24,7 +24,7 @@ Workspace data (flow steps, requirements, mappings, questions) is stored in **lo
 
 ## Screens
 
-- **Trade execution flow** — Interactive Mermaid diagram (phase subgraphs, step list, editable timing/summary). Edits sync into linked requirement bodies on **Requirements by timeline**.
+- **Trade execution flow** — Swimlane Mermaid diagrams (orders → trades → omni at fund → settled) for presentation, plus a comments thread. Underlying flow metadata still syncs into **Requirements by timeline** when updated (e.g. JSON import).
 - **Requirements by timeline** — Grouped by phase; categories; client/CPO notes; statuses.
 - **File ↔ API mapping** — Purchase and redemption grids (editable).
 - **From order to books** — Order → omni → books & records narrative.

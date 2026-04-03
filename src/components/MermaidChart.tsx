@@ -23,11 +23,17 @@ function ensureMermaid() {
 type Props = {
   definition: string;
   className?: string;
+  /** Taller viewport for slide-style flow pages */
+  size?: "default" | "presentation";
 };
 
 let mermaidRenderSeq = 0;
 
-export function MermaidChart({ definition, className }: Props) {
+export function MermaidChart({
+  definition,
+  className,
+  size = "default",
+}: Props) {
   const host = useRef<HTMLDivElement>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -68,10 +74,13 @@ export function MermaidChart({ definition, className }: Props) {
         className="mermaid-host"
         style={{
           overflow: "auto",
-          maxHeight: "min(70vh, 720px)",
+          maxHeight:
+            size === "presentation"
+              ? "min(88vh, 920px)"
+              : "min(70vh, 720px)",
           border: "1px solid var(--border)",
           borderRadius: 12,
-          padding: "1rem",
+          padding: size === "presentation" ? "1.25rem" : "1rem",
           background: "var(--bg-elevated)",
         }}
       />

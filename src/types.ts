@@ -60,3 +60,11 @@ export interface OpenQuestion {
   linkedRequirementIds: string[];
   updatedAt: string;
 }
+
+/** Thread on the trade execution flow (presentation) page */
+export interface FlowPresentationComment {
+  id: string;
+  author: string;
+  body: string;
+  createdAt: string;
+}

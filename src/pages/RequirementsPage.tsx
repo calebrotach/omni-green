@@ -60,7 +60,7 @@ export function RequirementsPage() {
       <p style={{ color: "var(--muted)", maxWidth: "65ch" }}>
         Requirements roll up to phases (order intake through books). Client and
         CPO notes support collaboration; statuses track decision maturity. Flow
-        edits on the trade execution flow page rewrite the highlighted “From execution flow” blocks
+        when underlying flow step data changes (e.g. via JSON import), the highlighted “From execution flow” blocks
         here. When you identify a new category (e.g., a new control theme), add
         it below — it becomes available on every requirement card.
       </p>
@@ -338,7 +338,7 @@ export function RequirementsPage() {
                     </label>
                   </div>
                   <label style={lbl}>
-                    Requirement body (synced blocks update from trade execution flow)
+                    Requirement body (synced blocks update from flow step data / import)
                     <textarea
                       style={{ ...inputStyle, minHeight: 120 }}
                       value={r.body}
