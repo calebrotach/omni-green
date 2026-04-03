@@ -1,10 +1,7 @@
 import type { CSSProperties } from "react";
 import { useState } from "react";
-import { MermaidChart } from "@/components/MermaidChart";
-import {
-  SWIMLANE_END_TO_END,
-  SWIMLANE_LIFECYCLE,
-} from "@/data/presentationDiagrams";
+import { SwimlaneFlow } from "@/components/SwimlaneFlow";
+import { END_TO_END_CHART, LIFECYCLE_CHART } from "@/data/swimlanePresentation";
 import { useAppStore } from "@/store/useAppStore";
 
 export function FlowPage() {
@@ -39,26 +36,20 @@ export function FlowPage() {
       <section>
         <h2 style={diagramTitle}>End-to-end swimlanes</h2>
         <p style={diagramCaption}>
-          Swimlanes are <strong>stacked top to bottom</strong>; within each row, time runs{" "}
-          <strong>left to right</strong>. Downward links enter the next lane’s header, then continue
-          horizontally across that actor.
+          Each <strong>row</strong> is a swimlane: solid role label on the left, pale tinted track,
+          and <strong>left → right</strong> flow with flat shapes (orange ovals for endpoints, blue
+          rectangles for actions). The top bar mirrors a simple timeline split like classic swimlane
+          charts.
         </p>
-        <MermaidChart
-          definition={SWIMLANE_END_TO_END}
-          size="presentation"
-        />
+        <SwimlaneFlow spec={END_TO_END_CHART} />
       </section>
 
       <section style={{ marginTop: "2.75rem" }}>
         <h2 style={diagramTitle}>Lifecycle summary</h2>
         <p style={diagramCaption}>
-          Same layout: horizontal steps per stage, four stages stacked vertically — orders →
-          trades → omni at fund → settled.
+          Same swimlane styling with a shorter timeline header.
         </p>
-        <MermaidChart
-          definition={SWIMLANE_LIFECYCLE}
-          size="presentation"
-        />
+        <SwimlaneFlow spec={LIFECYCLE_CHART} />
       </section>
 
       <section
