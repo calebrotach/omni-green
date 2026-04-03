@@ -1,6 +1,6 @@
 # OmniGreen workspace
 
-Password-protected internal web app for mapping **UMB custodian file + wire execution** (evergreen / private-wealth style programs), **requirements by timeline**, **file ↔ API mapping**, narrative, account structure, and **open questions**. All references use **OmniGreen** as the allocator (not “Monark”).
+Internal web app for mapping **UMB custodian file + wire execution** (evergreen / private-wealth style programs), **requirements by timeline**, **file ↔ API mapping**, narrative, account structure, and **open questions**. All references use **OmniGreen** as the allocator (not “Monark”). **Password protection is currently disabled** (open locally with no sign-in).
 
 ## Run locally
 
@@ -9,10 +9,7 @@ npm install
 npm run dev
 ```
 
-Open the URL Vite prints (usually `http://localhost:5173`). Sign in with:
-
-- **Development default password:** `omnigreen`
-- **Override:** set `VITE_APP_PASSWORD` in `.env.local` (see `.env.example`).
+Open the URL Vite prints (usually `http://localhost:5173`); the app loads straight into the workspace.
 
 ## Build
 
@@ -23,7 +20,7 @@ npm run preview
 
 ## Collaboration
 
-Workspace data (flow steps, requirements, mappings, questions) is stored in **localStorage** under the key `omni-green-workspace`. Use **Export JSON** / **Import JSON** in the header to share snapshots with your CPO. Authentication is **not** persisted—refresh requires sign-in again.
+Workspace data (flow steps, requirements, mappings, questions) is stored in **localStorage** under the key `omni-green-workspace`. Use **Export JSON** / **Import JSON** in the header to share snapshots with your CPO.
 
 ## Screens
 

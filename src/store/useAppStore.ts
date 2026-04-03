@@ -107,7 +107,6 @@ export function buildFlowchartMermaid(
 }
 
 interface AppState {
-  authenticated: boolean;
   requirementCategories: string[];
   flowNodes: FlowNode[];
   flowEdges: { from: string; to: string }[];
@@ -116,9 +115,6 @@ interface AppState {
   redemptionMapping: FieldMappingRow[];
   questions: OpenQuestion[];
   selectedFlowNodeId: string | null;
-
-  login: (password: string, expected: string) => boolean;
-  logout: () => void;
 
   setSelectedFlowNodeId: (id: string | null) => void;
   updateFlowNode: (id: string, patch: Partial<FlowNode>) => void;
@@ -159,18 +155,8 @@ const seedState = () => ({
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
-      authenticated: false,
       ...seedState(),
       selectedFlowNodeId: null,
-
-      login: (password, expected) => {
-        if (password === expected) {
-          set({ authenticated: true });
-          return true;
-        }
-        return false;
-      },
-      logout: () => set({ authenticated: false }),
 
       setSelectedFlowNodeId: (id) => set({ selectedFlowNodeId: id }),
 

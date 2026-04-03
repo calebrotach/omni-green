@@ -12,7 +12,6 @@ const nav = [
 ];
 
 export function Layout() {
-  const logout = useAppStore((s) => s.logout);
   const exportSnapshot = useAppStore((s) => s.exportSnapshot);
   const importSnapshot = useAppStore((s) => s.importSnapshot);
   const resetWorkspace = useAppStore((s) => s.resetWorkspace);
@@ -113,13 +112,6 @@ export function Layout() {
             }}
           >
             Reset
-          </button>
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={() => logout()}
-          >
-            Sign out
           </button>
         </div>
       </header>
