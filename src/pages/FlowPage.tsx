@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { useState } from "react";
 import { SwimlaneFlow } from "@/components/SwimlaneFlow";
-import { END_TO_END_CHART, LIFECYCLE_CHART } from "@/data/swimlanePresentation";
+import { END_TO_END_GRAPH, LIFECYCLE_GRAPH } from "@/data/swimlanePresentation";
 import { useAppStore } from "@/store/useAppStore";
 
 export function FlowPage() {
@@ -36,20 +36,19 @@ export function FlowPage() {
       <section>
         <h2 style={diagramTitle}>End-to-end swimlanes</h2>
         <p style={diagramCaption}>
-          Each <strong>row</strong> is a swimlane: solid role label on the left, pale tinted track,
-          and <strong>left → right</strong> flow with flat shapes (orange ovals for endpoints, blue
-          rectangles for actions). The top bar mirrors a simple timeline split like classic swimlane
-          charts.
+          <strong>Arrows</strong> show what happens next; <strong>labeled links</strong> are handoffs
+          between parties (files, wire, street execution, settlement). Time moves left → right within a
+          phase column, then continues into the next column when work shifts to settlement / books.
         </p>
-        <SwimlaneFlow spec={END_TO_END_CHART} />
+        <SwimlaneFlow spec={END_TO_END_GRAPH} />
       </section>
 
       <section style={{ marginTop: "2.75rem" }}>
         <h2 style={diagramTitle}>Lifecycle summary</h2>
         <p style={diagramCaption}>
-          Same swimlane styling with a shorter timeline header.
+          Same idea: follow arrows from orders through trades, fund, and settled state.
         </p>
-        <SwimlaneFlow spec={LIFECYCLE_CHART} />
+        <SwimlaneFlow spec={LIFECYCLE_GRAPH} />
       </section>
 
       <section
