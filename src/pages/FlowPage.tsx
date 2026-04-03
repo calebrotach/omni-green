@@ -39,8 +39,9 @@ export function FlowPage() {
       <section>
         <h2 style={diagramTitle}>End-to-end swimlanes</h2>
         <p style={diagramCaption}>
-          Each row is an actor; steps read left to right. Arrows crossing rows are
-          handoffs between OmniGreen, UMB, the fund / TA, and books &amp; records.
+          Swimlanes are <strong>stacked top to bottom</strong>; within each row, time runs{" "}
+          <strong>left to right</strong>. Downward links enter the next lane’s header, then continue
+          horizontally across that actor.
         </p>
         <MermaidChart
           definition={SWIMLANE_END_TO_END}
@@ -48,11 +49,11 @@ export function FlowPage() {
         />
       </section>
 
-      <section style={{ marginTop: "2.5rem" }}>
+      <section style={{ marginTop: "2.75rem" }}>
         <h2 style={diagramTitle}>Lifecycle summary</h2>
         <p style={diagramCaption}>
-          Condensed stages for presentations: orders → trades → omni at fund → settled
-          client view.
+          Same layout: horizontal steps per stage, four stages stacked vertically — orders →
+          trades → omni at fund → settled.
         </p>
         <MermaidChart
           definition={SWIMLANE_LIFECYCLE}

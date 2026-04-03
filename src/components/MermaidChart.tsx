@@ -64,8 +64,16 @@ export function MermaidChart({
     };
   }, [definition]);
 
+  const presentation = size === "presentation";
+
   return (
-    <div className={className}>
+    <div
+      className={
+        presentation
+          ? [className, "mermaid-presentation-wrap"].filter(Boolean).join(" ")
+          : className
+      }
+    >
       {err ? (
         <p style={{ color: "var(--danger)", margin: 0 }}>{err}</p>
       ) : null}
@@ -74,13 +82,11 @@ export function MermaidChart({
         className="mermaid-host"
         style={{
           overflow: "auto",
-          maxHeight:
-            size === "presentation"
-              ? "min(88vh, 920px)"
-              : "min(70vh, 720px)",
+          overflowX: presentation ? "auto" : undefined,
+          maxHeight: presentation ? "none" : "min(70vh, 720px)",
           border: "1px solid var(--border)",
           borderRadius: 12,
-          padding: size === "presentation" ? "1.25rem" : "1rem",
+          padding: presentation ? "1.25rem" : "1rem",
           background: "var(--bg-elevated)",
         }}
       />

@@ -107,3 +107,9 @@ code {
 .btn-ghost:hover {
   border-color: var(--muted);
 }
+
+/* Let presentation swimlanes extend horizontally instead of shrinking the SVG */
+.mermaid-presentation-wrap .mermaid-host svg {
+  max-width: none;
+  height: auto;
+}
