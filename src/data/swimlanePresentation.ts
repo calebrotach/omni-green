@@ -323,3 +323,163 @@ export const LIFECYCLE_GRAPH: SwimlaneGraphSpec = {
   nodes: applyDefaultShapes([...lifecycleNodesRaw]),
   edges: lifecycleEdges,
 };
+
+/**
+ * One order, one thread: subaccount → omnibus (out) → custodian → fund → back to
+ * subaccount economics. Edge labels call out state / representation changes.
+ */
+const singleOrderNodesRaw: SwimlaneGraphNode[] = [
+  {
+    id: "so1",
+    laneIndex: 0,
+    phaseIndex: 0,
+    order: 0,
+    text: "Subaccount state: instruction lives on OmniGreen B&R",
+  },
+  {
+    id: "so2",
+    laneIndex: 0,
+    phaseIndex: 0,
+    order: 1,
+    text: "Batching: folded into omnibus purchase line (internal subacct map)",
+  },
+  {
+    id: "so3",
+    laneIndex: 0,
+    phaseIndex: 0,
+    order: 2,
+    text: "Outbound: purchase import + bulk wire — custodian sees omnibus only",
+  },
+  {
+    id: "su1",
+    laneIndex: 1,
+    phaseIndex: 0,
+    order: 0,
+    text: "UMB: omnibus working order + funding matched",
+  },
+  {
+    id: "su2",
+    laneIndex: 1,
+    phaseIndex: 0,
+    order: 1,
+    text: "Street handoff: omnibus block to fund / NSCC (no subaccount id)",
+  },
+  {
+    id: "sf1",
+    laneIndex: 2,
+    phaseIndex: 1,
+    order: 0,
+    text: "Fund / TA state: one omnibus trade line",
+  },
+  {
+    id: "sf2",
+    laneIndex: 2,
+    phaseIndex: 1,
+    order: 1,
+    text: "Omnibus settlement completes (street / contract)",
+  },
+  {
+    id: "su3",
+    laneIndex: 1,
+    phaseIndex: 1,
+    order: 0,
+    text: "UMB → OmniGreen: activity + position files (omnibus references)",
+  },
+  {
+    id: "sb1",
+    laneIndex: 3,
+    phaseIndex: 1,
+    order: 0,
+    text: "OmniGreen: reconcile omnibus ledger to custodian",
+  },
+  {
+    id: "sb2",
+    laneIndex: 3,
+    phaseIndex: 1,
+    order: 1,
+    text: "Transform: allocate omnibus result → subaccount lots / economics",
+  },
+  {
+    id: "sb3",
+    laneIndex: 3,
+    phaseIndex: 1,
+    order: 2,
+    text: "Subaccount state again: settled position — API & dashboard",
+  },
+];
+
+const singleOrderEdges: SwimlaneGraphEdge[] = [
+  {
+    from: "so1",
+    to: "so2",
+    label: "Still subaccount; eligible for batch",
+  },
+  {
+    from: "so2",
+    to: "so3",
+    label: "Representation → omnibus for outbound file",
+  },
+  {
+    from: "so3",
+    to: "su1",
+    label: "Same-day import + wire (non-AIP style)",
+  },
+  { from: "su1", to: "su2", label: "Custodian STP" },
+  {
+    from: "su2",
+    to: "sf1",
+    label: "Omnibus-only message to TA",
+  },
+  { from: "sf1", to: "sf2", label: "Trade date + settlement" },
+  {
+    from: "sf2",
+    to: "su3",
+    label: "Reporting path to allocator",
+  },
+  {
+    from: "su3",
+    to: "sb1",
+    label: "Ingest files (omnibus layer)",
+  },
+  {
+    from: "sb1",
+    to: "sb2",
+    label: "Books: omnibus → subacct split",
+  },
+  {
+    from: "sb2",
+    to: "sb3",
+    label: "Client-visible state",
+  },
+];
+
+export const SINGLE_ORDER_TRACE_GRAPH: SwimlaneGraphSpec = {
+  phases: [
+    { label: "Instruction & transmit (same day)" },
+    { label: "Street, settle & subaccount allocation" },
+  ],
+  lanes: [
+    {
+      title: "OmniGreen — batching",
+      headerColor: "#6d28d9",
+      laneTint: "#f3e8ff",
+    },
+    {
+      title: "UMB — custody",
+      headerColor: "#15803d",
+      laneTint: "#dcfce7",
+    },
+    {
+      title: "Fund / TA",
+      headerColor: "#1d4ed8",
+      laneTint: "#dbeafe",
+    },
+    {
+      title: "OmniGreen — books & client",
+      headerColor: "#b91c1c",
+      laneTint: "#fee2e2",
+    },
+  ],
+  nodes: applyDefaultShapes([...singleOrderNodesRaw]),
+  edges: singleOrderEdges,
+};

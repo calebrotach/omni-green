@@ -1,7 +1,11 @@
 import type { CSSProperties } from "react";
 import { useState } from "react";
 import { SwimlaneFlow } from "@/components/SwimlaneFlow";
-import { END_TO_END_GRAPH, LIFECYCLE_GRAPH } from "@/data/swimlanePresentation";
+import {
+  END_TO_END_GRAPH,
+  LIFECYCLE_GRAPH,
+  SINGLE_ORDER_TRACE_GRAPH,
+} from "@/data/swimlanePresentation";
 import { useAppStore } from "@/store/useAppStore";
 
 export function FlowPage() {
@@ -25,16 +29,28 @@ export function FlowPage() {
           Trade execution flow
         </h1>
         <p style={{ margin: 0, color: "var(--muted)", maxWidth: "72ch", lineHeight: 1.55 }}>
-          Swimlane views of how <strong>orders</strong> become <strong>trades</strong> at the
-          custodian, become <strong>omnibus trades at the fund</strong>, then{" "}
-          <strong>settle</strong> back onto OmniGreen books for clients. For evergreen /
-          private-wealth style programs custodied at UMB; allocator in scope is{" "}
-          <strong>OmniGreen</strong>.
+          Swimlane views for evergreen / private-wealth style programs custodied at{" "}
+          <strong>UMB</strong>, US mutual-fund omnibus mechanics, and{" "}
+          <strong>OmniGreen</strong> as allocator. Follow <strong>one order</strong> below from
+          subaccount instruction through omnibus street and <strong>back to subaccount</strong>{" "}
+          economics; the other charts summarize batch-level and stage-level views.
         </p>
       </header>
 
       <section>
-        <h2 style={diagramTitle}>End-to-end swimlanes</h2>
+        <h2 style={diagramTitle}>Single order: creation → settlement (state trace)</h2>
+        <p style={diagramCaption}>
+          One instruction, one path. Boxes name the <strong>representation of that order</strong>{" "}
+          (subaccount vs omnibus); link labels are <strong>transforms or handoffs</strong>. The same
+          logical order is subaccount-native at OmniGreen, becomes <strong>omnibus-only</strong> to
+          UMB and the fund, then returns through <strong>allocation</strong> to subaccount settled
+          state for the client API and dashboard.
+        </p>
+        <SwimlaneFlow spec={SINGLE_ORDER_TRACE_GRAPH} />
+      </section>
+
+      <section style={{ marginTop: "2.75rem" }}>
+        <h2 style={diagramTitle}>End-to-end swimlanes (batch view)</h2>
         <p style={diagramCaption}>
           <strong>Arrows</strong> show what happens next; <strong>labeled links</strong> are handoffs
           between parties (files, wire, street execution, settlement). Time moves left → right within a
@@ -44,7 +60,7 @@ export function FlowPage() {
       </section>
 
       <section style={{ marginTop: "2.75rem" }}>
-        <h2 style={diagramTitle}>Lifecycle summary</h2>
+        <h2 style={diagramTitle}>Lifecycle summary (stages)</h2>
         <p style={diagramCaption}>
           Same idea: follow arrows from orders through trades, fund, and settled state.
         </p>

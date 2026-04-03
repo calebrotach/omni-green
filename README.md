@@ -24,7 +24,7 @@ Workspace data (flow steps, requirements, mappings, questions) is stored in **lo
 
 ## Screens
 
-- **Trade execution flow** — Swimlane chart with a **graph of steps** (phase columns × actor rows): black orthogonal connectors and **handoff labels** between OmniGreen, UMB, fund, and books, so order and interactions read as one process. Plus a comments thread. Underlying flow metadata still syncs into **Requirements by timeline** when updated (e.g. JSON import).
+- **Trade execution flow** — Swimlane charts with **explicit edges**: a **single-order trace** (subaccount → omnibus outbound → UMB → fund → files back → allocate to subaccount), plus batch and stage summaries. **Handoff labels** describe state/transform. Comments thread below. Underlying flow metadata still syncs into **Requirements by timeline** when updated (e.g. JSON import).
 - **Requirements by timeline** — Grouped by phase; categories; client/CPO notes; statuses.
 - **File ↔ API mapping** — Purchase and redemption grids (editable).
 - **From order to books** — Order → omni → books & records narrative.
