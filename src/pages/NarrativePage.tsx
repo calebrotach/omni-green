@@ -1,7 +1,7 @@
 export function NarrativePage() {
   return (
     <div>
-      <h1 style={{ marginTop: 0 }}>Element 4 · From order to books</h1>
+      <h1 style={{ marginTop: 0 }}>From order to books</h1>
       <article
         style={{
           color: "var(--muted)",
@@ -66,7 +66,8 @@ export function NarrativePage() {
           UMB’s <strong>activity file</strong> provides processing signals; the{" "}
           <strong>position file</strong> carries confirmed omnibus positions.
           OmniGreen maps both into reconciliation states — the exact timestamps
-          and field semantics remain open with UMB and are tracked in Element 6.
+          and field semantics remain open with UMB and are tracked under{" "}
+          {"Open questions & decisions"}.
         </p>
 
         <h2 style={{ color: "var(--text)", fontSize: "1.05rem", marginTop: "1.25rem" }}>
@@ -87,7 +88,7 @@ export function NarrativePage() {
           positions through the API, and preserves an audit trail from client
           instruction → file → wire → custodian confirmation → internal
           allocation. Any mismatch triggers the operational playbooks captured
-          as requirements in Element 2.
+          as requirements by timeline.
         </p>
       </article>
     </div>

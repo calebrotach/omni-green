@@ -25,14 +25,14 @@ npm run preview
 
 Workspace data (flow steps, requirements, mappings, questions) is stored in **localStorage** under the key `omni-green-workspace`. Use **Export JSON** / **Import JSON** in the header to share snapshots with your CPO. Authentication is **not** persisted—refresh requires sign-in again.
 
-## Elements
+## Screens
 
-1. **Execution flow** — Interactive Mermaid diagram (phase subgraphs, step list, editable timing/summary). Edits sync into linked requirement bodies in Element 2.
-2. **Requirements** — Grouped by timeline phase; categories; client/CPO notes; statuses.
-3. **File ↔ API mapping** — Purchase and redemption grids (editable).
-4. **Narrative** — Order → omni → books & records story.
-5. **Account relationships** — Mermaid view of omnibus vs subaccounts.
-6. **Questions & decisions** — Tracker with links to requirements.
+- **Trade execution flow** — Interactive Mermaid diagram (phase subgraphs, step list, editable timing/summary). Edits sync into linked requirement bodies on **Requirements by timeline**.
+- **Requirements by timeline** — Grouped by phase; categories; client/CPO notes; statuses.
+- **File ↔ API mapping** — Purchase and redemption grids (editable).
+- **From order to books** — Order → omni → books & records narrative.
+- **Account relationships** — Mermaid view of omnibus vs subaccounts.
+- **Open questions & decisions** — Tracker with links to requirements.
 
 ## Reference context
 

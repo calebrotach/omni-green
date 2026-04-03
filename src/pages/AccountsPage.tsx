@@ -31,11 +31,11 @@ const ACCOUNT_DIAGRAM = `flowchart TB
 export function AccountsPage() {
   return (
     <div>
-      <h1 style={{ marginTop: 0 }}>Element 5 · Account relationships</h1>
+      <h1 style={{ marginTop: 0 }}>Account relationships</h1>
       <p style={{ color: "var(--muted)", maxWidth: "65ch" }}>
         OmniGreen maintains the economic truth for subaccounts while funds and
         UMB only see omnibus identifiers. When a new requirements category
-        appears (e.g., “Segregation of duties”), add it in Element 2 so the
+        appears (e.g., “Segregation of duties”), add it under Requirements by timeline so the
         governance story stays aligned with this structure.
       </p>
       <div style={{ marginTop: "1.25rem" }}>

@@ -306,7 +306,7 @@ export const initialRequirements: Requirement[] = [
     category: "Books & records",
     phase: "Account structure & custody",
     title: "Where accounts must exist (omnibus vs subaccount)",
-    body: `<!--FLOW:manual-->\nOmnibus accounts exist at OmniGreen and at participating funds; subaccounts exist only on OmniGreen B&R and client channels.\n<!--/FLOW-->\n\nCross-reference the account relationship diagram (Element 5).`,
+    body: `<!--FLOW:manual-->\nOmnibus accounts exist at OmniGreen and at participating funds; subaccounts exist only on OmniGreen B&R and client channels.\n<!--/FLOW-->\n\nCross-reference the Account relationships diagram.`,
     status: "proposed",
     clientNotes: "",
     cpoNotes: "",

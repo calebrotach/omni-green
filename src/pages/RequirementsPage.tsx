@@ -56,11 +56,11 @@ export function RequirementsPage() {
 
   return (
     <div>
-      <h1 style={{ marginTop: 0 }}>Element 2 · Requirements by timeline</h1>
+      <h1 style={{ marginTop: 0 }}>Requirements by timeline</h1>
       <p style={{ color: "var(--muted)", maxWidth: "65ch" }}>
         Requirements roll up to phases (order intake through books). Client and
         CPO notes support collaboration; statuses track decision maturity. Flow
-        edits in Element 1 rewrite the highlighted “From execution flow” blocks
+        edits on the trade execution flow page rewrite the highlighted “From execution flow” blocks
         here. When you identify a new category (e.g., a new control theme), add
         it below — it becomes available on every requirement card.
       </p>
@@ -338,7 +338,7 @@ export function RequirementsPage() {
                     </label>
                   </div>
                   <label style={lbl}>
-                    Requirement body (synced blocks update from Element 1)
+                    Requirement body (synced blocks update from trade execution flow)
                     <textarea
                       style={{ ...inputStyle, minHeight: 120 }}
                       value={r.body}

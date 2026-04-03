@@ -9,7 +9,7 @@ export function QuestionsPage() {
 
   return (
     <div>
-      <h1 style={{ marginTop: 0 }}>Element 6 · Open questions &amp; decisions</h1>
+      <h1 style={{ marginTop: 0 }}>{`Open questions & decisions`}</h1>
       <p style={{ color: "var(--muted)", maxWidth: "65ch" }}>
         Shared tracker for UMB timing questions, file semantics, and product
         calls. Link rows to requirements for traceability. Export JSON from the

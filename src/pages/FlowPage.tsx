@@ -21,7 +21,7 @@ export function FlowPage() {
 
   return (
     <div>
-      <h1 style={{ marginTop: 0 }}>Element 1 · Trade execution flow</h1>
+      <h1 style={{ marginTop: 0 }}>Trade execution flow</h1>
       <p style={{ color: "var(--muted)", maxWidth: "65ch" }}>
         Model omnibus mutual-fund style flow for evergreen private-wealth
         programs custodied at UMB (pattern aligned with US omni trading and
@@ -35,7 +35,7 @@ export function FlowPage() {
         </a>
         ). Company name in scope: <strong>OmniGreen</strong> (replace any legacy
         “Monark” references). Edit a step on the right — linked requirements in{" "}
-        <strong>Element 2</strong> update automatically.
+        <strong>Requirements by timeline</strong> update automatically.
       </p>
 
       <div

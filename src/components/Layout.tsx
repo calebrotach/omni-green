@@ -3,12 +3,12 @@ import { useAppStore } from "@/store/useAppStore";
 import { useState } from "react";
 
 const nav = [
-  { to: "/flow", label: "1 · Execution flow" },
-  { to: "/requirements", label: "2 · Requirements" },
-  { to: "/mapping", label: "3 · File ↔ API mapping" },
-  { to: "/narrative", label: "4 · Narrative" },
-  { to: "/accounts", label: "5 · Account relationships" },
-  { to: "/questions", label: "6 · Questions & decisions" },
+  { to: "/flow", label: "Trade execution flow" },
+  { to: "/requirements", label: "Requirements by timeline" },
+  { to: "/mapping", label: "File ↔ API mapping" },
+  { to: "/narrative", label: "From order to books" },
+  { to: "/accounts", label: "Account relationships" },
+  { to: "/questions", label: "Open questions & decisions" },
 ];
 
 export function Layout() {

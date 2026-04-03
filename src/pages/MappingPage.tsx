@@ -8,7 +8,7 @@ export function MappingPage() {
 
   return (
     <div>
-      <h1 style={{ marginTop: 0 }}>Element 3 · File ↔ API mapping</h1>
+      <h1 style={{ marginTop: 0 }}>File ↔ API mapping</h1>
       <p style={{ color: "var(--muted)", maxWidth: "65ch" }}>
         Starter grids connect custodian purchase/redemption import fields to the
         OmniGreen API surface your clients will use. Names are placeholders
