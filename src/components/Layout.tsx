@@ -4,7 +4,7 @@ import { useState } from "react";
 
 const nav = [
   { to: "/flow", label: "Trade execution flow" },
-  { to: "/requirements", label: "Requirements by timeline" },
+  { to: "/requirements", label: "Requirements by flow step" },
   { to: "/mapping", label: "File ↔ API mapping" },
   { to: "/narrative", label: "From order to books" },
   { to: "/accounts", label: "Account relationships" },
@@ -155,7 +155,7 @@ export function Layout() {
         style={{
           flex: 1,
           padding: "1.5rem",
-          maxWidth: mainWide ? "min(100%, 1600px)" : 1200,
+          maxWidth: mainWide ? "none" : 1200,
           width: "100%",
           margin: "0 auto",
         }}

@@ -1,83 +1,129 @@
 import type { CSSProperties } from "react";
 import { useMemo, useState } from "react";
-import { buildBodyForNewRequirement } from "@/lib/requirementBody";
+import { PhaseQuickReference } from "@/components/PhaseQuickReference";
+import { RequirementEditModal } from "@/components/RequirementEditModal";
 import {
-  statusesList,
-  useAppStore,
-} from "@/store/useAppStore";
-import type { RequirementPhase, RequirementStatus } from "@/types";
+  buildClickUpBundle,
+  buildClickUpCsv,
+  buildClickUpMarkdown,
+  downloadTextFile,
+} from "@/lib/clickUpExport";
+import { orderFlowNodes } from "@/lib/flowNodeOrder";
+import { getPhaseTheme, REQUIREMENT_PHASES_ORDER } from "@/lib/phaseColors";
+import { requirementPreview } from "@/lib/requirementText";
+import { useAppStore } from "@/store/useAppStore";
+import type { Requirement, RequirementPhase, RequirementStatus } from "@/types";
 
-const PHASES: RequirementPhase[] = [
-  "Order intake",
-  "Submission & files",
-  "Wire & funding",
-  "Confirmation & positions",
-  "Settlement & books",
-  "Client experience & API",
-  "Account structure & custody",
-];
+type ModalMode =
+  | { type: "create"; defaultFlowIds: string[] }
+  | { type: "edit"; id: string }
+  | null;
 
 export function RequirementsPage() {
   const requirements = useAppStore((s) => s.requirements);
+  const flowNodes = useAppStore((s) => s.flowNodes);
+  const flowEdges = useAppStore((s) => s.flowEdges);
   const updateRequirement = useAppStore((s) => s.updateRequirement);
   const addRequirement = useAppStore((s) => s.addRequirement);
   const addRequirementCategory = useAppStore((s) => s.addRequirementCategory);
   const requirementCategories = useAppStore((s) => s.requirementCategories);
-  const flowNodes = useAppStore((s) => s.flowNodes);
 
-  const [phaseFilter, setPhaseFilter] = useState<RequirementPhase | "all">(
-    "all",
-  );
+  const [phaseFilter, setPhaseFilter] = useState<RequirementPhase | "all">("all");
   const [newCategory, setNewCategory] = useState("");
+  const [modal, setModal] = useState<ModalMode>(null);
 
-  const [draftOpen, setDraftOpen] = useState(false);
-  const [draftTitle, setDraftTitle] = useState("");
-  const [draftPhase, setDraftPhase] = useState<RequirementPhase>("Order intake");
-  const [draftCategory, setDraftCategory] = useState(requirementCategories[0] ?? "");
-  const [draftBody, setDraftBody] = useState("");
-  const [draftLinks, setDraftLinks] = useState<string[]>([]);
+  const orderedNodes = useMemo(
+    () => orderFlowNodes(flowNodes, flowEdges),
+    [flowNodes, flowEdges],
+  );
 
-  const grouped = useMemo(() => {
-    const list =
-      phaseFilter === "all"
-        ? requirements
-        : requirements.filter((r) => r.phase === phaseFilter);
-    const map = new Map<RequirementPhase, typeof requirements>();
-    for (const r of list) {
-      const arr = map.get(r.phase) ?? [];
-      arr.push(r);
-      map.set(r.phase, arr);
-    }
-    return map;
+  const visibleRequirements = useMemo(() => {
+    if (phaseFilter === "all") return requirements;
+    return requirements.filter((r) => r.phase === phaseFilter);
   }, [requirements, phaseFilter]);
 
-  const phasesToShow =
-    phaseFilter === "all" ? PHASES : ([phaseFilter] as RequirementPhase[]);
+  const nodesToShow = useMemo(() => {
+    if (phaseFilter === "all") return orderedNodes;
+    return orderedNodes.filter((n) => n.phase === phaseFilter);
+  }, [orderedNodes, phaseFilter]);
+
+  const reqsByFlowNodeId = useMemo(() => {
+    const map = new Map<string, Requirement[]>();
+    for (const r of visibleRequirements) {
+      for (const fid of r.linkedFlowNodeIds) {
+        const arr = map.get(fid) ?? [];
+        arr.push(r);
+        map.set(fid, arr);
+      }
+    }
+    for (const [, arr] of map) {
+      arr.sort((a, b) => a.title.localeCompare(b.title));
+    }
+    return map;
+  }, [visibleRequirements]);
+
+  const unassigned = useMemo(
+    () =>
+      visibleRequirements.filter(
+        (r) =>
+          r.linkedFlowNodeIds.length === 0 ||
+          !r.linkedFlowNodeIds.some((id) => flowNodes.some((n) => n.id === id)),
+      ),
+    [visibleRequirements, flowNodes],
+  );
+
+  const exportSlug = () => new Date().toISOString().slice(0, 10);
+
+  const handleExportJson = () => {
+    const bundle = buildClickUpBundle(requirements, flowNodes);
+    downloadTextFile(
+      `omni-green-clickup-${exportSlug()}.json`,
+      JSON.stringify(bundle, null, 2),
+      "application/json",
+    );
+  };
+
+  const handleExportCsv = () => {
+    const bundle = buildClickUpBundle(requirements, flowNodes);
+    downloadTextFile(
+      `omni-green-clickup-${exportSlug()}.csv`,
+      buildClickUpCsv(bundle),
+      "text/csv;charset=utf-8",
+    );
+  };
+
+  const handleExportMd = () => {
+    const bundle = buildClickUpBundle(requirements, flowNodes);
+    downloadTextFile(
+      `omni-green-clickup-${exportSlug()}.md`,
+      buildClickUpMarkdown(bundle),
+      "text/markdown;charset=utf-8",
+    );
+  };
 
   return (
     <div>
-      <h1 style={{ marginTop: 0 }}>Requirements by timeline</h1>
-      <p style={{ color: "var(--muted)", maxWidth: "65ch" }}>
-        Requirements roll up to phases (order intake through books). Client and
-        CPO notes support collaboration; statuses track decision maturity. Flow
-        when underlying flow step data changes (e.g. via JSON import), the highlighted “From execution flow” blocks
-        here. When you identify a new category (e.g., a new control theme), add
-        it below — it becomes available on every requirement card.
+      <h1 style={{ marginTop: 0 }}>Requirements by flow step</h1>
+      <p style={{ color: "var(--muted)", maxWidth: "72ch", lineHeight: 1.55, marginBottom: "0.65rem" }}>
+        Grouped under each <strong>execution-flow step</strong> (same sequence as{" "}
+        <strong>Trade execution flow</strong>). Rows are summaries; <strong>Edit</strong> opens full
+        text, client/CPO notes, and linked steps. <strong>Phase filter</strong> limits by timeline
+        phase. <strong>ClickUp exports</strong> (JSON, CSV, Markdown) map to an epic plus stories.
       </p>
+
+      <PhaseQuickReference />
 
       <div
         style={{
           display: "flex",
           flexWrap: "wrap",
           gap: "0.75rem",
-          margin: "1rem 0",
+          margin: "0 0 1.25rem",
           alignItems: "flex-end",
         }}
       >
         <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
-            Phase filter
-          </span>
+          <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>Phase filter</span>
           <select
             value={phaseFilter}
             onChange={(e) =>
@@ -86,7 +132,7 @@ export function RequirementsPage() {
             style={selectStyle}
           >
             <option value="all">All phases</option>
-            {PHASES.map((p) => (
+            {REQUIREMENT_PHASES_ORDER.map((p) => (
               <option key={p} value={p}>
                 {p}
               </option>
@@ -116,286 +162,265 @@ export function RequirementsPage() {
         <button
           type="button"
           className="btn-primary"
-          onClick={() => setDraftOpen((v) => !v)}
+          onClick={() => setModal({ type: "create", defaultFlowIds: [] })}
         >
-          {draftOpen ? "Close new requirement" : "New requirement"}
+          New requirement
         </button>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          <button type="button" className="btn-ghost" onClick={handleExportJson}>
+            ClickUp JSON
+          </button>
+          <button type="button" className="btn-ghost" onClick={handleExportCsv}>
+            ClickUp CSV
+          </button>
+          <button type="button" className="btn-ghost" onClick={handleExportMd}>
+            ClickUp Markdown
+          </button>
+        </div>
       </div>
 
-      {draftOpen ? (
-        <section
-          style={{
-            border: "1px solid var(--border)",
-            borderRadius: 12,
-            padding: "1rem",
-            marginBottom: "1.25rem",
-            background: "var(--bg-elevated)",
-          }}
-        >
-          <h2 style={{ marginTop: 0, fontSize: "1.05rem" }}>New requirement</h2>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-              gap: "0.65rem",
-            }}
-          >
-            <label style={lbl}>
-              Title
-              <input
-                style={inputStyle}
-                value={draftTitle}
-                onChange={(e) => setDraftTitle(e.target.value)}
-              />
-            </label>
-            <label style={lbl}>
-              Phase
-              <select
-                style={selectStyle}
-                value={draftPhase}
-                onChange={(e) =>
-                  setDraftPhase(e.target.value as RequirementPhase)
-                }
-              >
-                {PHASES.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label style={lbl}>
-              Category
-              <select
-                style={selectStyle}
-                value={draftCategory}
-                onChange={(e) => setDraftCategory(e.target.value)}
-              >
-                {requirementCategories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <label style={{ ...lbl, marginTop: "0.65rem" }}>
-            Link to flow steps (optional — inserts synced blocks)
-            <select
-              multiple
-              style={{ ...selectStyle, minHeight: 120 }}
-              value={draftLinks}
-              onChange={(e) =>
-                setDraftLinks(
-                  Array.from(e.target.selectedOptions).map((o) => o.value),
-                )
-              }
-            >
-              {flowNodes.map((n) => (
-                <option key={n.id} value={n.id}>
-                  {n.title}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label style={{ ...lbl, marginTop: "0.65rem" }}>
-            Additional detail (static — not auto-synced)
-            <textarea
-              style={{ ...inputStyle, minHeight: 80 }}
-              value={draftBody}
-              onChange={(e) => setDraftBody(e.target.value)}
-            />
-          </label>
-          <button
-            type="button"
-            className="btn-primary"
-            style={{ marginTop: "0.75rem" }}
-            onClick={() => {
-              if (!draftTitle.trim()) return;
-              addRequirement({
-                category: draftCategory,
-                phase: draftPhase,
-                title: draftTitle.trim(),
-                body: buildBodyForNewRequirement(
-                  flowNodes,
-                  draftLinks,
-                  draftBody,
-                ),
-                status: "draft",
-                clientNotes: "",
-                cpoNotes: "",
-                linkedFlowNodeIds: draftLinks,
-              });
-              setDraftTitle("");
-              setDraftBody("");
-              setDraftLinks([]);
-              setDraftOpen(false);
-            }}
-          >
-            Save requirement
-          </button>
-        </section>
-      ) : null}
+      <RequirementEditModal
+        mode={modal}
+        onClose={() => setModal(null)}
+        flowNodes={flowNodes}
+        requirements={requirements}
+        requirementCategories={requirementCategories}
+        onSaveCreate={(r) => addRequirement(r)}
+        onSaveEdit={(id, patch) => updateRequirement(id, patch)}
+      />
 
-      {phasesToShow.map((phase) => {
-        const rows = grouped.get(phase);
-        if (!rows?.length) return null;
-        return (
-          <section key={phase} style={{ marginBottom: "2rem" }}>
-            <h2
+      <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+        {nodesToShow.map((node) => {
+          const linked = reqsByFlowNodeId.get(node.id) ?? [];
+          const phaseTheme = getPhaseTheme(node.phase);
+          return (
+            <section
+              key={node.id}
               style={{
-                fontSize: "1.1rem",
-                borderBottom: "1px solid var(--border)",
-                paddingBottom: "0.35rem",
+                border: "1px solid var(--border)",
+                borderLeft: `4px solid ${phaseTheme.accent}`,
+                borderRadius: 12,
+                overflow: "hidden",
+                background: "var(--bg-elevated)",
               }}
             >
-              {phase}
-            </h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              {rows.map((r) => (
-                <article
-                  key={r.id}
-                  style={{
-                    border: "1px solid var(--border)",
-                    borderRadius: 12,
-                    padding: "1rem",
-                    background: "var(--bg-elevated)",
-                  }}
-                >
-                  <div
+              <div
+                style={{
+                  padding: "0.85rem 1rem",
+                  borderBottom: "1px solid var(--border)",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
+                  gap: "0.65rem",
+                  background: `linear-gradient(90deg, ${phaseTheme.darkPanelTint} 0%, var(--bg) 42%)`,
+                }}
+              >
+                <div style={{ flex: "1 1 240px" }}>
+                  <h2
                     style={{
+                      margin: 0,
+                      fontSize: "1rem",
+                      fontWeight: 700,
+                      letterSpacing: "-0.01em",
                       display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
                       flexWrap: "wrap",
-                      gap: "0.5rem",
-                      alignItems: "baseline",
-                      marginBottom: "0.5rem",
                     }}
                   >
-                    <input
-                      style={{ ...inputStyle, flex: "2 1 200px", fontWeight: 600 }}
-                      value={r.title}
-                      onChange={(e) =>
-                        updateRequirement(r.id, { title: e.target.value })
-                      }
-                    />
-                    <select
-                      style={{ ...selectStyle, flex: "0 0 140px" }}
-                      value={r.status}
-                      onChange={(e) =>
-                        updateRequirement(r.id, {
-                          status: e.target.value as RequirementStatus,
-                        })
-                      }
-                    >
-                      {statusesList().map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                      gap: "0.5rem",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    <label style={lbl}>
-                      Phase
-                      <select
-                        style={selectStyle}
-                        value={r.phase}
-                        onChange={(e) =>
-                          updateRequirement(r.id, {
-                            phase: e.target.value as RequirementPhase,
-                          })
-                        }
-                      >
-                        {PHASES.map((p) => (
-                          <option key={p} value={p}>
-                            {p}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label style={lbl}>
-                      Category
-                      <select
-                        style={selectStyle}
-                        value={r.category}
-                        onChange={(e) =>
-                          updateRequirement(r.id, { category: e.target.value })
-                        }
-                      >
-                        {requirementCategories.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
-                  <label style={lbl}>
-                    Requirement body (synced blocks update from flow step data / import)
-                    <textarea
-                      style={{ ...inputStyle, minHeight: 120 }}
-                      value={r.body}
-                      onChange={(e) =>
-                        updateRequirement(r.id, { body: e.target.value })
-                      }
-                    />
-                  </label>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: "0.5rem",
-                      marginTop: "0.5rem",
-                    }}
-                  >
-                    <label style={lbl}>
-                      Client notes
-                      <textarea
-                        style={{ ...inputStyle, minHeight: 72 }}
-                        value={r.clientNotes}
-                        onChange={(e) =>
-                          updateRequirement(r.id, {
-                            clientNotes: e.target.value,
-                          })
-                        }
-                      />
-                    </label>
-                    <label style={lbl}>
-                      CPO notes
-                      <textarea
-                        style={{ ...inputStyle, minHeight: 72 }}
-                        value={r.cpoNotes}
-                        onChange={(e) =>
-                          updateRequirement(r.id, { cpoNotes: e.target.value })
-                        }
-                      />
-                    </label>
-                  </div>
-                  {r.lastSyncedAt ? (
-                    <p
+                    <span
+                      aria-hidden
                       style={{
-                        margin: "0.5rem 0 0",
-                        fontSize: "0.75rem",
-                        color: "var(--muted)",
+                        width: 10,
+                        height: 10,
+                        borderRadius: 3,
+                        background: phaseTheme.accent,
+                        flexShrink: 0,
                       }}
-                    >
-                      Last flow sync: {new Date(r.lastSyncedAt).toLocaleString()}
-                    </p>
-                  ) : null}
-                </article>
-              ))}
+                    />
+                    {node.title}
+                  </h2>
+                  <p style={{ margin: "0.35rem 0 0", fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.45 }}>
+                    <strong style={{ color: phaseTheme.accent, fontWeight: 600 }}>{node.phase}</strong>
+                    {" · "}
+                    {node.timingNote}
+                  </p>
+                  <p style={{ margin: "0.35rem 0 0", fontSize: "0.78rem", color: "var(--muted)" }}>
+                    {node.actor} · {node.systemOrChannel}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  style={{ flexShrink: 0, fontSize: "0.82rem" }}
+                  onClick={() =>
+                    setModal({ type: "create", defaultFlowIds: [node.id] })
+                  }
+                >
+                  + Add requirement
+                </button>
+              </div>
+              <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+                {linked.length === 0 ? (
+                  <li
+                    style={{
+                      padding: "0.75rem 1rem",
+                      color: "var(--muted)",
+                      fontSize: "0.88rem",
+                    }}
+                  >
+                    No requirements linked to this step
+                    {phaseFilter !== "all" ? " in the current phase filter" : ""}.
+                  </li>
+                ) : (
+                  linked.map((r) => (
+                    <CompactRequirementRow
+                      key={r.id}
+                      requirement={r}
+                      onEdit={() => setModal({ type: "edit", id: r.id })}
+                    />
+                  ))
+                )}
+              </ul>
+            </section>
+          );
+        })}
+
+        {unassigned.length > 0 ? (
+          <section
+            style={{
+              border: "1px dashed var(--border)",
+              borderRadius: 12,
+              overflow: "hidden",
+              background: "var(--bg-elevated)",
+            }}
+          >
+            <div
+              style={{
+                padding: "0.85rem 1rem",
+                borderBottom: "1px solid var(--border)",
+                background: "var(--bg)",
+              }}
+            >
+              <h2 style={{ margin: 0, fontSize: "1rem", fontWeight: 700 }}>
+                Not tied to a flow step
+              </h2>
+              <p style={{ margin: "0.35rem 0 0", fontSize: "0.82rem", color: "var(--muted)" }}>
+                Link these in <strong>Edit</strong> to a diagram step, or leave as cross-cutting.
+              </p>
             </div>
+            <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+              {unassigned.map((r) => (
+                <CompactRequirementRow
+                  key={r.id}
+                  requirement={r}
+                  onEdit={() => setModal({ type: "edit", id: r.id })}
+                />
+              ))}
+            </ul>
           </section>
-        );
-      })}
+        ) : null}
+      </div>
     </div>
+  );
+}
+
+function CompactRequirementRow({
+  requirement: r,
+  onEdit,
+}: {
+  requirement: Requirement;
+  onEdit: () => void;
+}) {
+  const preview = requirementPreview(r.body, 160);
+  const reqPhase = getPhaseTheme(r.phase);
+  return (
+    <li
+      style={{
+        borderTop: "1px solid var(--border)",
+        padding: "0.65rem 1rem",
+        paddingLeft: "0.85rem",
+        borderLeft: `3px solid ${reqPhase.accent}`,
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: "flex-start",
+        gap: "0.65rem",
+      }}
+    >
+      <div style={{ flex: "1 1 200px", minWidth: 0 }}>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: "0.45rem",
+            marginBottom: 4,
+          }}
+        >
+          <span
+            title={r.phase}
+            aria-hidden
+            style={{
+              width: 7,
+              height: 7,
+              borderRadius: 2,
+              background: reqPhase.accent,
+              flexShrink: 0,
+            }}
+          />
+          <StatusChip status={r.status} />
+          <span style={{ fontWeight: 600, fontSize: "0.92rem" }}>{r.title}</span>
+          <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>· {r.category}</span>
+          <span style={{ fontSize: "0.78rem", color: reqPhase.accent }}>· {r.phase}</span>
+        </div>
+        {preview ? (
+          <p
+            style={{
+              margin: 0,
+              fontSize: "0.82rem",
+              color: "var(--muted)",
+              lineHeight: 1.45,
+            }}
+          >
+            {preview}
+          </p>
+        ) : null}
+        {r.lastSyncedAt ? (
+          <p style={{ margin: "0.35rem 0 0", fontSize: "0.7rem", color: "var(--muted)" }}>
+            Last flow metadata sync: {new Date(r.lastSyncedAt).toLocaleString()}
+          </p>
+        ) : null}
+      </div>
+      <button
+        type="button"
+        className="btn-primary"
+        style={{ fontSize: "0.82rem", padding: "0.35rem 0.75rem", flexShrink: 0 }}
+        onClick={onEdit}
+      >
+        Edit
+      </button>
+    </li>
+  );
+}
+
+function StatusChip({ status }: { status: RequirementStatus }) {
+  return (
+    <span
+      style={{
+        fontSize: "0.65rem",
+        fontWeight: 700,
+        letterSpacing: "0.06em",
+        textTransform: "uppercase",
+        padding: "0.2rem 0.45rem",
+        borderRadius: 6,
+        border: "1px solid var(--border)",
+        color: "var(--accent-dim)",
+        background: "rgba(61, 214, 140, 0.08)",
+      }}
+    >
+      {status}
+    </span>
   );
 }
 
@@ -408,11 +433,3 @@ const inputStyle: CSSProperties = {
 };
 
 const selectStyle = { ...inputStyle } as const;
-
-const lbl: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: 4,
-  fontSize: "0.75rem",
-  color: "var(--muted)",
-};

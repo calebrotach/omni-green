@@ -2,6 +2,8 @@
  * Swimlane graph: nodes sit in phase columns + lane rows; edges show sequence and handoffs.
  */
 
+import type { RequirementPhase } from "@/types";
+
 export type SwimlaneNodeShape = "oval" | "rect" | "hex";
 
 export type SwimlaneGraphNode = {
@@ -29,6 +31,8 @@ export type SwimlaneGraphLane = {
 
 export type SwimlaneGraphPhase = {
   label: string;
+  /** Maps this swimlane column to shared palette (Requirements page, legends). */
+  requirementPhase: RequirementPhase;
 };
 
 export type SwimlaneGraphSpec = {
@@ -176,7 +180,10 @@ const endToEndEdges: SwimlaneGraphEdge[] = [
 ];
 
 export const END_TO_END_GRAPH: SwimlaneGraphSpec = {
-  phases: [{ label: "Same day (ET)" }, { label: "Settlement & books" }],
+  phases: [
+    { label: "Same day (ET)", requirementPhase: "Submission & files" },
+    { label: "Settlement & books", requirementPhase: "Settlement & books" },
+  ],
   lanes: [
     {
       title: "OmniGreen — allocator",
@@ -310,7 +317,10 @@ const lifecycleEdges: SwimlaneGraphEdge[] = [
 ];
 
 export const LIFECYCLE_GRAPH: SwimlaneGraphSpec = {
-  phases: [{ label: "Order & trade" }, { label: "Fund & settled" }],
+  phases: [
+    { label: "Order & trade", requirementPhase: "Order intake" },
+    { label: "Fund & settled", requirementPhase: "Settlement & books" },
+  ],
   lanes: END_TO_END_GRAPH.lanes.map((l, i) =>
     i === 0
       ? { ...l, title: "1 · Orders — OmniGreen" }
@@ -455,8 +465,14 @@ const singleOrderEdges: SwimlaneGraphEdge[] = [
 
 export const SINGLE_ORDER_TRACE_GRAPH: SwimlaneGraphSpec = {
   phases: [
-    { label: "Instruction & transmit (same day)" },
-    { label: "Street, settle & subaccount allocation" },
+    {
+      label: "Instruction & transmit (same day)",
+      requirementPhase: "Submission & files",
+    },
+    {
+      label: "Street, settle & subaccount allocation",
+      requirementPhase: "Settlement & books",
+    },
   ],
   lanes: [
     {
