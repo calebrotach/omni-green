@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import type { SwimlaneGraphNode, SwimlaneGraphSpec } from "@/data/swimlanePresentation";
+import { getPhaseTheme } from "@/lib/phaseColors";
 
 type Props = {
   spec: SwimlaneGraphSpec;
@@ -231,6 +232,8 @@ type PathItem = {
   label?: string;
   labelX: number;
   labelY: number;
+  /** True when edge connects different swimlanes (system handoff). */
+  crossLane: boolean;
 };
 
 function useCrossCellPaths(
@@ -264,7 +267,14 @@ function useCrossCellPaths(
           const fa = relRect(fromEl, cr);
           const ta = relRect(toEl, cr);
           const { d, labelX, labelY } = buildOrthogonalPath(fa, ta);
-          next.push({ d, label: edge.label, labelX, labelY });
+          const crossLane = na.laneIndex !== nb.laneIndex;
+          next.push({
+            d,
+            label: edge.label,
+            labelX,
+            labelY,
+            crossLane,
+          });
         }
         setPaths(next);
       });
@@ -347,7 +357,8 @@ export function SwimlaneFlow({ spec }: Props) {
       .filter((n) => n.laneIndex === laneIndex && n.phaseIndex === phaseIndex)
       .sort((a, b) => a.order - b.order);
 
-  const gridCols = `11rem repeat(${phases.length}, minmax(260px, 1fr))`;
+  /** Phase columns size to cell content so rows of steps do not scroll inside the cell. */
+  const gridCols = `11rem repeat(${phases.length}, minmax(240px, max-content))`;
 
   return (
     <div
@@ -357,7 +368,9 @@ export function SwimlaneFlow({ spec }: Props) {
         borderRadius: 8,
         overflow: "hidden",
         background: CARD.bg,
-        overflowX: "auto",
+        overflowX: "visible",
+        width: "max-content",
+        minWidth: "100%",
         boxShadow: "0 1px 2px rgba(15, 23, 42, 0.08)",
       }}
     >
@@ -366,7 +379,6 @@ export function SwimlaneFlow({ spec }: Props) {
           display: "grid",
           gridTemplateColumns: gridCols,
           background: CARD.slateBar,
-          color: CARD.slateText,
           borderBottom: `2px solid ${CARD.rule}`,
         }}
       >
@@ -374,96 +386,39 @@ export function SwimlaneFlow({ spec }: Props) {
           style={{
             borderRight: "1px solid rgba(255,255,255,0.25)",
             minHeight: 42,
+            background: CARD.slateBar,
           }}
         />
-        {phases.map((seg, i) => (
-          <div
-            key={seg.label}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "0.78rem",
-              fontWeight: 700,
-              letterSpacing: "0.03em",
-              textTransform: "uppercase",
-              padding: "0.55rem 0.5rem",
-              borderRight:
-                i < phases.length - 1
-                  ? "2px solid rgba(255,255,255,0.45)"
-                  : undefined,
-            }}
-          >
-            {seg.label}
-          </div>
-        ))}
+        {phases.map((seg, i) => {
+          const pt = getPhaseTheme(seg.requirementPhase);
+          return (
+            <div
+              key={seg.label}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "0.78rem",
+                fontWeight: 700,
+                letterSpacing: "0.03em",
+                textTransform: "uppercase",
+                padding: "0.55rem 0.5rem",
+                background: pt.swimlaneHeaderBg,
+                color: pt.swimlaneHeaderText,
+                borderRight:
+                  i < phases.length - 1
+                    ? "2px solid rgba(255,255,255,0.35)"
+                    : undefined,
+                borderLeft: i === 0 ? "none" : `3px solid ${pt.accent}`,
+              }}
+            >
+              {seg.label}
+            </div>
+          );
+        })}
       </div>
 
       <div ref={bodyRef} style={{ position: "relative" }}>
-        <svg
-          width={svgSize.w}
-          height={svgSize.h}
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            pointerEvents: "none",
-            zIndex: 2,
-            overflow: "visible",
-          }}
-          aria-hidden
-        >
-          <defs>
-            <marker
-              id={`swim-arrow-${arrowId}`}
-              markerWidth="7"
-              markerHeight="5"
-              refX="6"
-              refY="2.5"
-              orient="auto"
-              markerUnits="userSpaceOnUse"
-            >
-              <path d="M0,0 L7,2.5 L0,5 Z" fill={CARD.stroke} />
-            </marker>
-          </defs>
-          {phaseDividerX != null && phases.length > 1 ? (
-            <line
-              x1={phaseDividerX}
-              y1={0}
-              x2={phaseDividerX}
-              y2={svgSize.h}
-              stroke={CARD.phaseLine}
-              strokeWidth={2}
-            />
-          ) : null}
-          {paths.map((p, i) => (
-            <Fragment key={i}>
-              <path
-                d={p.d}
-                fill="none"
-                stroke={CARD.stroke}
-                strokeWidth={1.35}
-                strokeLinejoin="miter"
-                strokeLinecap="butt"
-                markerEnd={`url(#swim-arrow-${arrowId})`}
-              />
-              {p.label ? (
-                <text
-                  x={p.labelX}
-                  y={p.labelY}
-                  textAnchor="middle"
-                  fill="#1e293b"
-                  fontSize="9.5"
-                  fontFamily={CARD.font}
-                  fontWeight={700}
-                >
-                  {p.label.length > 48 ? `${p.label.slice(0, 46)}…` : p.label}
-                </text>
-              ) : null}
-            </Fragment>
-          ))}
-        </svg>
-
         {lanes.map((lane, li) => (
           <div
             key={lane.title}
@@ -473,7 +428,6 @@ export function SwimlaneFlow({ spec }: Props) {
               borderBottom:
                 li < lanes.length - 1 ? `2px solid ${CARD.rule}` : undefined,
               position: "relative",
-              zIndex: 3,
               background: CARD.bg,
             }}
           >
@@ -494,44 +448,154 @@ export function SwimlaneFlow({ spec }: Props) {
             >
               {lane.title}
             </div>
-            {phases.map((_, pi) => {
+            {phases.map((seg, pi) => {
               const cellNodes = nodesByCell(li, pi);
+              const pt = getPhaseTheme(seg.requirementPhase);
 
               return (
                 <div
                   key={pi}
                   ref={pi === 0 && li === 0 ? phase0CellRef : undefined}
                   style={{
-                    background: lane.laneTint,
+                    position: "relative",
                     padding: "0.85rem 0.75rem",
                     minHeight: 72,
-                    display: "flex",
-                    flexDirection: "row",
-                    flexWrap: "nowrap",
-                    alignItems: "center",
-                    alignContent: "center",
-                    gap: 0,
-                    overflowX: "auto",
-                    overflowY: "hidden",
                     borderRight:
                       pi < phases.length - 1
                         ? "1px solid rgba(148,163,184,0.5)"
                         : undefined,
+                    borderLeft: `3px solid ${pt.accent}`,
                   }}
                 >
-                  {cellNodes.length === 0 ? null : (
-                    cellNodes.map((n, idx) => (
-                      <Fragment key={n.id}>
-                        {idx > 0 ? <FlowArrowRight /> : null}
-                        <StepBox node={n} setNodeRef={setNodeRef} />
-                      </Fragment>
-                    ))
-                  )}
+                  <div
+                    aria-hidden
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: `linear-gradient(90deg, ${pt.swimlaneCellWash} 0%, ${pt.swimlaneCellWash} 26%, transparent 68%), ${lane.laneTint}`,
+                      zIndex: 0,
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "relative",
+                      zIndex: 2,
+                      display: "flex",
+                      flexDirection: "row",
+                      flexWrap: "nowrap",
+                      alignItems: "center",
+                      alignContent: "center",
+                      gap: 0,
+                      overflowX: "visible",
+                      overflowY: "visible",
+                    }}
+                  >
+                    {cellNodes.length === 0 ? null : (
+                      cellNodes.map((n, idx) => (
+                        <Fragment key={n.id}>
+                          {idx > 0 ? <FlowArrowRight /> : null}
+                          <StepBox node={n} setNodeRef={setNodeRef} />
+                        </Fragment>
+                      ))
+                    )}
+                  </div>
                 </div>
               );
             })}
           </div>
         ))}
+        <svg
+          width={svgSize.w}
+          height={svgSize.h}
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            zIndex: 1,
+            pointerEvents: "none",
+            overflow: "visible",
+          }}
+          aria-hidden
+        >
+          <defs>
+            <marker
+              id={`swim-arrow-${arrowId}`}
+              markerWidth="8"
+              markerHeight="5"
+              refX="7"
+              refY="2.5"
+              orient="auto"
+              markerUnits="userSpaceOnUse"
+            >
+              <path d="M0,0 L8,2.5 L0,5 Z" fill={CARD.stroke} />
+            </marker>
+            <marker
+              id={`swim-arrow-handoff-${arrowId}`}
+              markerWidth="9"
+              markerHeight="6"
+              refX="8"
+              refY="3"
+              orient="auto"
+              markerUnits="userSpaceOnUse"
+            >
+              <path d="M0,0 L9,3 L0,6 Z" fill={CARD.stroke} />
+            </marker>
+          </defs>
+          {phaseDividerX != null && phases.length > 1 ? (
+            <line
+              x1={phaseDividerX}
+              y1={0}
+              x2={phaseDividerX}
+              y2={svgSize.h}
+              stroke={CARD.phaseLine}
+              strokeWidth={2}
+            />
+          ) : null}
+          {paths.map((p, i) => (
+            <Fragment key={i}>
+              {p.crossLane ? (
+                <path
+                  d={p.d}
+                  fill="none"
+                  stroke="#ffffff"
+                  strokeWidth={5}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  opacity={0.95}
+                />
+              ) : null}
+              <path
+                d={p.d}
+                fill="none"
+                stroke={CARD.stroke}
+                strokeWidth={p.crossLane ? 2.25 : 1.35}
+                strokeLinejoin="miter"
+                strokeLinecap="butt"
+                markerEnd={
+                  p.crossLane
+                    ? `url(#swim-arrow-handoff-${arrowId})`
+                    : `url(#swim-arrow-${arrowId})`
+                }
+              />
+              {p.label ? (
+                <text
+                  x={p.labelX}
+                  y={p.labelY}
+                  textAnchor="middle"
+                  fill="#1e293b"
+                  fontSize={p.crossLane ? 10 : 9.5}
+                  fontFamily={CARD.font}
+                  fontWeight={700}
+                  stroke="#ffffff"
+                  strokeWidth={3}
+                  paintOrder="stroke fill"
+                >
+                  {p.label.length > 48 ? `${p.label.slice(0, 46)}…` : p.label}
+                </text>
+              ) : null}
+            </Fragment>
+          ))}
+        </svg>
       </div>
     </div>
   );

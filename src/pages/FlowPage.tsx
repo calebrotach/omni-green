@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { useState } from "react";
+import { PhaseColorLegend } from "@/components/PhaseColorLegend";
 import { SwimlaneFlow } from "@/components/SwimlaneFlow";
 import {
   END_TO_END_GRAPH,
@@ -35,6 +36,9 @@ export function FlowPage() {
           subaccount instruction through omnibus street and <strong>back to subaccount</strong>{" "}
           economics; the other charts summarize batch-level and stage-level views.
         </p>
+        <div style={{ marginTop: "1rem", maxWidth: 900 }}>
+          <PhaseColorLegend />
+        </div>
       </header>
 
       <section>

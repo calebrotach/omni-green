@@ -18,6 +18,7 @@ import {
   initialRedemptionMapping,
   initialRequirements,
 } from "@/data/seed";
+import { getPhaseTheme } from "@/lib/phaseColors";
 
 function syncRequirementBodies(
   requirements: Requirement[],
@@ -84,6 +85,10 @@ export function buildFlowchartMermaid(
       );
     }
     lines.push("  end");
+    const t = getPhaseTheme(phase);
+    lines.push(
+      `  style SG_${slug} fill:${t.mermaidFill},stroke:${t.mermaidStroke},color:#e8eef4`,
+    );
   }
 
   for (const e of edges) {
